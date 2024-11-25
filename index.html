@@ -139,6 +139,8 @@
             margin-top: 60px; /* Ensures there’s space below the button */
         }
     </style>
+    <!-- Include Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
     <!-- Dark Mode Toggle Button -->
@@ -231,24 +233,28 @@
             }
         });
 
-        // Handle file upload
+        // Handle file upload and OCR
         async function handleFileUpload(file) {
             uploadedFileName = file.name;
             extractedTitle.textContent = `Extracted Text: ${uploadedFileName}`;
-            const formData = new FormData();
-            formData.append('file', file);
+            
+            // Show image preview (for visual feedback)
+            const imageURL = URL.createObjectURL(file);
+            uploadedImagePreview.src = imageURL;
+            uploadedImagePreview.style.display = 'block';
 
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
+            // Perform OCR using Tesseract.js
+            Tesseract.recognize(
+                file,
+                'eng', // Language code for English, you can change to other language codes
+                {
+                    logger: (m) => console.log(m), // For logging progress
+                }
+            ).then(({ data: { text } }) => {
+                output.value = text;
+            }).catch((err) => {
+                output.value = "OCR failed. Error: " + err.message;
             });
-
-            const data = await response.json();
-            if (data.text) {
-                output.value = data.text;
-            } else {
-                output.value = data.error || "Something went wrong!";
-            }
         }
 
         // Clipboard paste functionality (handling images)
