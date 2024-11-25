@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR App</title>
+    <style>
+        /* Default Light Mode */
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #333;
+            position: relative; /* For positioning the button */
+        }
+
+        /* Left column (upload section) */
+        #left-column {
+            width: 25%;
+            padding: 20px;
+            background-color: #f4f4f4;
+            box-sizing: border-box;
+            border-right: 2px solid #ccc;
+            position: relative; /* Ensures the button is correctly positioned within the column */
+        }
+
+        /* Right column (extracted text section) */
+        #right-column {
+            width: 75%;
+            padding: 20px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* Styling for drag-and-drop area */
+        #drop-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            height: 200px;
+            text-align: center;
+            color: #888;
+        }
+        #drop-area.dragover {
+            background-color: #f0f0f0;
+        }
+        #drop-area p {
+            margin-top: 60px;
+        }
+
+        /* Display a pasted image preview */
+        #pasted-image {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+
+        /* Styling for editable text area */
+        #output {
+            width: 100%;
+            height: 300px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            resize: both;
+            overflow: auto;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #2e2e2e;
+            color: #fff;
+        }
+
+        body.dark-mode #left-column {
+            background-color: #444;
+            border-right: 2px solid #777;
+        }
+
+        body.dark-mode #right-column {
+            background-color: #333;
+        }
+
+        body.dark-mode #drop-area {
+            border-color: #aaa;
+            color: #fff;
+        }
+
+        body.dark-mode #output {
+            background-color: #444;
+            color: #fff;
+        }
+
+        /* Button to toggle between light/dark mode */
+        #mode-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            z-index: 1; /* Ensure the button is above other content */
+        }
+
+        #mode-toggle:hover {
+            background-color: #0056b3;
+        }
+
+        /* Button for Downloading Text */
+        #download-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        #download-button:hover {
+            background-color: #218838;
+        }
+
+        /* Space below the button to avoid overlap */
+        #left-column h1 {
+            margin-top: 60px; /* Ensures there’s space below the button */
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle Button -->
+    <button id="mode-toggle">Switch to Dark Mode</button>
+
+    <!-- Left Column: Upload Section -->
+    <div id="left-column">
+        <h1>IMAGE TO TEXT</h1>
+
+        <!-- Drag and drop area with updated placeholder -->
+        <div id="drop-area">
+            <p>Drag and drop your image here, click to select, or paste an image from your clipboard.</p>
+        </div>
+
+        <!-- Traditional file input -->
+        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form">
+            <input type="file" name="file" accept="image/*" required style="display:none" id="file-input">
+            <button type="submit">Upload Image</button>
+        </form>
+
+        <!-- Pasted image preview -->
+        <img id="pasted-image" src="" alt="Pasted Image Preview" style="display:none">
+    </div>
+
+    <!-- Right Column: Extracted Text Section -->
+    <div id="right-column">
+        <h2 id="extracted-title">Extracted Text:</h2>
+        <!-- Make the text output area editable by using a <textarea> -->
+        <textarea id="output" placeholder="The extracted text will appear here..."></textarea>
+
+        <!-- Download Button -->
+        <button id="download-button">Download Text</button>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const output = document.getElementById('output');
+        const uploadedImagePreview = document.getElementById('pasted-image');
+        const uploadForm = document.getElementById('upload-form');
+        const modeToggle = document.getElementById('mode-toggle');
+        const downloadButton = document.getElementById('download-button');
+        const extractedTitle = document.getElementById('extracted-title');
+        const body = document.body;
+        let uploadedFileName = '';
+
+        // Toggle Dark Mode
+        modeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                modeToggle.textContent = "Switch to Light Mode";
+            } else {
+                modeToggle.textContent = "Switch to Dark Mode";
+            }
+        });
+
+        // Prevent default behavior for drag events
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragover');
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFileUpload(file);
+            } else {
+                output.value = "Please drop a valid image file.";
+            }
+        });
+
+        // Trigger file input click when the drop area is clicked
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle the file selection via the file input
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFileUpload(file);
+            } else {
+                output.value = "Please select a valid image file.";
+            }
+        });
+
+        // Handle file upload
+        async function handleFileUpload(file) {
+            uploadedFileName = file.name;
+            extractedTitle.textContent = `Extracted Text: ${uploadedFileName}`;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.text) {
+                output.value = data.text;
+            } else {
+                output.value = data.error || "Something went wrong!";
+            }
+        }
+
+        // Clipboard paste functionality (handling images)
+        window.addEventListener('paste', async (e) => {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    const imageURL = URL.createObjectURL(file);
+                    uploadedImagePreview.src = imageURL;
+                    uploadedImagePreview.style.display = 'block';
+
+                    // Handle the image upload from clipboard
+                    await handleFileUpload(file);
+                }
+            }
+        });
+
+        // Download the extracted text as a .txt file
+        downloadButton.addEventListener('click', () => {
+            if (uploadedFileName && output.value.trim()) {
+                const text = output.value.trim();
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${uploadedFileName}.txt`; // Use the uploaded file's name for download
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert("No text to download.");
+            }
+        });
+    </script>
+</body>
+</html>
