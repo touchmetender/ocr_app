@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR App</title>
+    <title>Image to Text -Touchmetender</title>
     <style>
         /* Default Light Mode */
         body {
@@ -138,6 +138,22 @@
         #left-column h1 {
             margin-top: 60px; /* Ensures there’s space below the button */
         }
+
+        /* Credits and License Section */
+        #credits {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        #credits a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        #credits a:hover {
+            text-decoration: underline;
+        }
     </style>
     <!-- Include Tesseract.js -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
@@ -173,6 +189,13 @@
 
         <!-- Download Button -->
         <button id="download-button">Download Text</button>
+    </div>
+
+    <!-- Credits and License Section -->
+    <div id="credits">
+        <p>App by <a href="https://github.com/touchmetender" target="_blank">Touchmetender</a> | Powered by <a href="https://github.com/tesseract-ocr/tesseract" target="_blank">Tesseract.js</a></p>
+        <p>License: MIT | Icons by <a href="https://fontawesome.com" target="_blank">Font Awesome</a></p>
+        <p>Created with the help of <a href="https://openai.com/chatgpt" target="_blank">ChatGPT</a></p>
     </div>
 
     <script>
