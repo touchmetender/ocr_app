@@ -1,4 +1,8 @@
+
+
 # Image-to-Text Web App
+
+
 
 **Image-to-Text** is a web application that allows users to extract text from images using Optical Character Recognition (OCR) technology. The app uses Tesseract OCR and integrates AI-powered capabilities through ChatGPT for additional text processing.
 
@@ -31,6 +35,6 @@ To run this project locally, follow these steps:
 This project utilizes the following technologies:
 
 - **Tesseract OCR**: [GitHub](https://github.com/tesseract-ocr/tesseract) for optical character recognition.
-- **ChatGPT**: AI model for processing and improving text interpretation.
+- **ChatGPT**: AI model for processing and improving text interpretation. (AND ALL THE CODES WRITTEN)
 - **Electron**: [ElectronJS](https://electronjs.org/) for creating the cross-platform desktop app framework.
 
