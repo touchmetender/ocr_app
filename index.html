@@ -277,6 +277,7 @@
                 output.value = text;
             }).catch((err) => {
                 output.value = "OCR failed. Error: " + err.message;
+                console.error("OCR failed. Error: ", err);
             });
         }
 
